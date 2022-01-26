@@ -1,0 +1,384 @@
+---
+title: "PSY471 Final Project Model Analysis"
+author: "Ruoqi Huang"
+date: "22/11/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(rtdists)
+library(sciplot)
+library(ggsignif)
+library(ggpubr)
+```
+
+
+#Descriptive statistics
+
+```{r}
+ddm <- read.csv("/Users/athenahuang/Downloads/ddm_parameters-4.csv")
+data1 <- read.csv("/Users/athenahuang/Downloads/data-2.csv")
+ddm
+data1
+```
+
+Distribution for the data-2
+```{r}
+hist(data1$rt)
+rt_density <- density(data1$rt)
+plot(rt_density)
+table(data1$response)
+table(data1$match)
+table(data1$pair_type)
+```
+
+Distribution for the ddm parameter
+```{r}
+hist(ddm$v)
+v_density <- density(ddm$v)
+plot(v_density)
+```
+Subset for each participant on their performance
+```{r}
+#subset(ddm, subj_idx == "0")
+#subset(data1, subj_idx == "0")
+ddm_match <- subset(ddm, match == "match")
+ddm_good_match <- subset(ddm_match, pair_type == "good")
+ddm_mismatch <- subset(ddm, match == "mismatch")
+ddm_good_mismatch <- subset(ddm_mismatch, pair_type == "good")
+ddm_con_match <- subset(ddm_match, pair_type == "confusable")
+
+ddm_mismatch <- subset(ddm, match == "mismatch")
+ddm_con_mismatch <- subset(ddm_mismatch, pair_type == "confusable")
+```
+
+
+```{r}
+summary(ddm_good_mismatch$t)
+t.test(ddm_good_mismatch$t, ddm_good_match$t)
+t.test(ddm_con_mismatch$t, ddm_con_match$t)
+t.test(ddm_con_mismatch$t, ddm_good_mismatch$t)
+t.test(ddm_con_match$t, ddm_good_match$t)
+```
+
+```{r}
+summary(ddm_good_mismatch$v)
+#t.test(ddm_good_mismatch$v, ddm_good_match$v)
+t.test(ddm_con_mismatch$v, ddm_con_match$v)
+t.test(ddm_con_mismatch$v, ddm_good_mismatch$v)
+t.test(ddm_con_match$v, ddm_good_match$v)
+
+```
+```{r}
+summary(ddm_good_mismatch$a)
+t.test(ddm_good_mismatch$a, ddm_good_match$a)
+t.test(ddm_con_mismatch$a, ddm_con_match$a)
+t.test(ddm_con_mismatch$a, ddm_good_mismatch$a)
+t.test(ddm_con_match$a, ddm_good_match$a)
+```
+
+```{r}
+summary(ddm_good_mismatch$t)
+t.test(ddm_good_mismatch$t, ddm_good_match$t)
+t.test(ddm_con_mismatch$t, ddm_con_match$t)
+t.test(ddm_con_mismatch$t, ddm_good_mismatch$t)
+t.test(ddm_con_match$t, ddm_good_match$t)
+```
+
+
+```{r}
+data1_match <- subset(data1, match == "match")
+data1_mismatch <- subset(data1, match == "mismatch")
+data1_con_mismatch <- subset(data1_mismatch, pair_type == "confusable")
+data1_good_mismatch <- subset(data1_mismatch, pair_type == "good")
+data1_con_match <- subset(data1_match, pair_type == "confusable")
+data1_good_match <- subset(data1_match, pair_type == "good")
+```
+
+```{r}
+summary(data1_con_mismatch$response)
+summary(data1_con_match$response)
+summary(data1_good_match$response)
+summary(data1_good_mismatch$response)
+varsum <- c(summary(data1_con_mismatch$response),summary(data1_con_match$response),summary(data1_good_match$response),summary(data1_good_mismatch$response),summary(data1_con_mismatch$rt),summary(data1_con_match$rt),summary(data1_good_match$rt),summary(data1_good_mismatch$rt),summary(ddm_con_mismatch$v),summary(ddm_con_match$v),summary(ddm_good_match$v),summary(ddm_good_mismatch$v),summary(ddm_con_mismatch$a),summary(ddm_con_match$a),summary(ddm_good_match$a),summary(ddm_good_mismatch$a),summary(ddm_con_mismatch$t),summary(ddm_con_match$t),summary(ddm_good_match$t),summary(ddm_good_mismatch$t))
+write.csv(varsum, file = 'varsum.csv')
+```
+
+
+```{r}
+library(ggplot2)
+library(ggsignif)
+
+data <- data.frame(
+  Response_Type=c("GM","Gmis","CM","Cmis"),
+  Accuracy=c(mean(data1_good_match$response), mean(data1_good_mismatch$response), mean(data1_con_match$response), mean(data1_con_mismatch$response)),
+  sd=c(se(data1_good_match$response), se(data1_good_mismatch$response), se(data1_con_match$response), se(data1_con_mismatch$response))
+)
+
+# Most basic error bar
+acc <- ggplot(data) +
+    geom_bar(aes(x=Response_Type, y=Accuracy), stat="identity", fill="grey", alpha=0.7) +
+    geom_errorbar( aes(x=Response_Type, ymin=Accuracy-sd, ymax=Accuracy+sd), width=0.2, colour="black", alpha=0.9, size=0.5)+geom_line(data=tibble(x=c(1,3),y=c(1,1)),aes(x=x,y=y))+geom_text(data=tibble(x=2,y=1.125),aes(x=x,y=y,label="*"),size=8)
+acc
+```
+```{r}
+sd(data1_con_match$response)
+sd(data1_good_match$response)
+sd(data1_con_mismatch$response)
+sd(data1_good_mismatch$response)
+t.test(data1_con_mismatch$response, data1_con_match$response)
+t.test(data1_con_mismatch$response, data1_good_mismatch$response)
+t.test(data1_con_match$response, data1_good_match$response)
+t.test(data1_good_mismatch$response, data1_good_match$response)
+```
+
+
+```{r}
+sd(data1_con_match$rt)
+sd(data1_good_match$rt)
+sd(data1_con_mismatch$rt)
+sd(data1_good_mismatch$rt)
+t.test(data1_con_mismatch$rt, data1_con_match$rt)
+t.test(data1_con_match$rt, data1_good_match$rt)
+t.test(data1_con_match$rt, data1_good_mismatch$rt)
+t.test(data1_con_mismatch$rt, data1_good_match$rt)
+t.test(data1_con_mismatch$rt, data1_good_mismatch$rt)
+t.test(data1_good_mismatch$rt, data1_good_match$rt)
+```
+
+```{r}
+t.test(data1_con_mismatch$response, data1_con_match$response)
+t.test(data1_con_match$response, data1_good_match$response)
+t.test(data1_con_match$response, data1_good_mismatch$response)
+t.test(data1_con_mismatch$response, data1_good_match$response)
+t.test(data1_con_mismatch$response, data1_good_mismatch$response)
+t.test(data1_good_mismatch$response, data1_good_match$response)
+```
+
+```{r}
+data <- data.frame(
+  Response_Type=c("GM","Gmis","CM","Cmis"),
+  Reaction_Time=c(mean(data1_good_match$rt), mean(data1_good_mismatch$rt), mean(data1_con_match$rt), mean(data1_con_mismatch$rt)),
+  sd=c(se(data1_good_match$rt), se(data1_good_mismatch$rt), se(data1_con_match$rt), se(data1_con_mismatch$rt))
+)
+ 
+# Most basic error bar
+rtime <- ggplot(data) +
+    geom_bar(aes(x=Response_Type, y=Reaction_Time), stat="identity", fill="grey", alpha=0.7) +
+    geom_errorbar( aes(x=Response_Type, ymin=Reaction_Time-sd, ymax=Reaction_Time+sd), width=0.2, colour="black", alpha=0.9, size=0.5)+  geom_line(data=tibble(x=c(2,4),y=c(0.8,0.8)),aes(x=x,y=y))+geom_line(data=tibble(x=c(1,3),y=c(0.65,0.65)),aes(x=x,y=y))+geom_text(data=tibble(x=2,y=0.66),aes(x=x,y=y,label="***"),size=4)+geom_text(data=tibble(x=3,y=0.82),aes(x=x,y=y,label="***"),size=4)
+rtime
+```
+
+
+```{r}
+xtabs(~match+pair_type, ddm)
+aggregate(v~match+pair_type,ddm, mean)
+
+model.1 <- aov(v~match+pair_type,ddm)
+summary(model.1)
+```
+
+```{r}
+t.test(ddm_con_match$a, ddm_con_mismatch$a)
+t.test(ddm_con_match$a, ddm_good_match$a)
+t.test(ddm_con_match$a, ddm_good_mismatch$a)
+t.test(ddm_con_mismatch$a, ddm_good_match$a)
+t.test(ddm_con_mismatch$a, ddm_good_mismatch$a)
+t.test(ddm_good_match$a, ddm_good_mismatch$a)
+```
+
+```{r}
+
+t.test(ddm_con_match$t, ddm_con_mismatch$t)
+t.test(ddm_con_match$t, ddm_good_match$t)
+t.test(ddm_con_match$t, ddm_good_mismatch$t)
+t.test(ddm_con_mismatch$t, ddm_good_match$t)
+t.test(ddm_con_mismatch$t, ddm_good_mismatch$t)
+t.test(ddm_good_match$t, ddm_good_mismatch$t)
+```
+
+```{r}
+sd(ddm_con_match$v)
+sd(ddm_good_match$v)
+sd(ddm_con_mismatch$v)
+sd(ddm_good_mismatch$v)
+t.test(ddm_con_match$v, ddm_con_mismatch$v)
+t.test(ddm_con_match$v, ddm_good_match$v)
+t.test(ddm_con_match$v, ddm_good_mismatch$v)
+t.test(ddm_con_mismatch$v, ddm_good_match$v)
+t.test(ddm_con_mismatch$v, ddm_good_mismatch$v)
+t.test(ddm_good_match$v, ddm_good_mismatch$v)
+```
+
+
+```{r}
+sd(ddm_con_match$a)
+sd(ddm_good_match$a)
+sd(ddm_con_mismatch$a)
+sd(ddm_good_mismatch$a)
+t.test(ddm_good_mismatch$a, ddm_good_match$a)
+t.test(ddm_con_mismatch$a, ddm_con_match$a)
+t.test(ddm_con_mismatch$a, ddm_good_mismatch$a)
+t.test(ddm_con_match$a, ddm_good_match$a)
+```
+
+
+```{r}
+data <- data.frame(
+  Response_Type=c("GM","Gmis","CM","Cmis"),
+  a=c(mean(ddm_good_match$a), mean(ddm_good_mismatch$a), mean(ddm_con_match$a), mean(ddm_con_mismatch$a)),
+  sd=c(se(ddm_good_match$a), se(ddm_good_mismatch$a), se(ddm_good_mismatch$a), se(ddm_good_mismatch$a)))
+ 
+# Most basic error bar
+a_g <- ggplot(data) +
+    geom_bar(aes(x=Response_Type, y=a), stat="identity", fill="grey", alpha=0.7) +
+    geom_errorbar( aes(x=Response_Type, ymin=a-sd, ymax=a+sd), width=0.2, colour="black", alpha=0.9, size=0.5)+  geom_line(data=tibble(x=c(2,4),y=c(1.5,1.5)),aes(x=x,y=y))+geom_line(data=tibble(x=c(1,3),y=c(1.4,1.4)),aes(x=x,y=y))+geom_text(data=tibble(x=2,y=1.42),aes(x=x,y=y,label="***"),size=4)+geom_text(data=tibble(x=3,y=1.55),aes(x=x,y=y,label="***"),size=4)
+a_g
+```
+```{r}
+data <- data.frame(
+  Response_Type=c("GM","Gmis","CM","Cmis"),
+  v=c(mean(ddm_good_match$v), mean(ddm_good_mismatch$v), mean(ddm_con_match$v), mean(ddm_con_mismatch$v)),
+  sd=c(se(ddm_good_match$v), se(ddm_good_mismatch$v), se(ddm_good_mismatch$v), se(ddm_good_mismatch$v)))
+ 
+# Most basic error bar
+v_g <- ggplot(data) +
+    geom_bar(aes(x=Response_Type, y=v), stat="identity", fill="grey", alpha=0.7) +
+    geom_errorbar( aes(x=Response_Type, ymin=v-sd, ymax=v+sd), width=0.2, colour="black", alpha=0.9, size=0.5)+  geom_line(data=tibble(x=c(1,3),y=c(1.9,1.9)),aes(x=x,y=y))+geom_text(data=tibble(x=2,y=2),aes(x=x,y=y,label="***"),size=4)+geom_line(data=tibble(x=c(1,2),y=c(1.55,1.55)),aes(x=x,y=y))+geom_text(data=tibble(x=1.5,y=1.6),aes(x=x,y=y,label="***"),size=4) + geom_line(data=tibble(x=c(2,4),y=c(2.1,2.1)),aes(x=x,y=y))+geom_text(data=tibble(x=3,y=2.15),aes(x=x,y=y,label="***"),size=4)
+v_g
+```
+
+
+
+```{r}
+data <- data.frame(
+  Response_Type=c("GM","Gmis","CM","Cmis"),
+  t=c(mean(ddm_good_match$t), mean(ddm_good_mismatch$t), mean(ddm_con_match$t), mean(ddm_con_mismatch$t)),
+  sd=c(se(ddm_good_match$t), se(ddm_good_mismatch$t), se(ddm_good_mismatch$t), se(ddm_good_mismatch$t)))
+ 
+# Most basic error bar
+t_g <- ggplot(data) +
+    geom_bar(aes(x=Response_Type, y=t), stat="identity", fill="grey", alpha=0.7) +
+    geom_errorbar( aes(x=Response_Type, ymin=t-sd, ymax=t+sd), width=0.2, colour="black", alpha=0.9, size=0.5)
+```
+
+```{r}
+ggarrange(rtime, acc,
+          labels = c("A", "B", "C"),
+          ncol = 2, nrow = 1)
+```
+```{r}
+ggarrange(v_g,                                                 # First row with scatter plot
+          ggarrange(a_g, t_g, ncol = 2, labels = c("B", "C")), # Second row with box and dot plots
+          nrow = 2, 
+          labels = "A"                                        # Labels of the scatter plot
+          ) 
+```
+
+```{r}
+t_g
+```
+
+Descriptive
+ANOVA(factorial design with interaction)
+Interaction(plot)
+post-hoc(t-test) -> interpretation
+
+summary measure for participant
+t-test(within-subject design)
+  
+Average Accuracy ->
+
+Regression?
+Expectation
+
+Analyze
+Interpret that
+Think about the interpretation
+```{r}
+#individual performance overall
+
+mean(subset(data1$response, data1$subj_idx==1, data1$match=="good match", data1$pair_type==""))
+mean(subset(data1$response, data1$subj_idx==2))
+mean(subset(data1$response, data1$subj_idx==3))
+mean(subset(data1$response, data1$subj_idx==4))
+mean(subset(data1$response, data1$subj_idx==5))
+mean(subset(data1$response, data1$subj_idx==6))
+mean(subset(data1$response, data1$subj_idx==7))
+```
+```{r}
+with(data1, by(rt, match, mean))
+```
+```{r}
+aggregate( response ~ subj_idx, data1, mean)
+aggregate( response ~ match, data1, mean)
+aggregate( response ~ pair_type, data1, mean)
+```
+```{r}
+by_par <- data1 %>% group_by(match,pair_type) %>% summarise (x = mean(response), y=mean(rt))
+match <- subset(by_par$y, by_par$match=="match")
+mismatch <- subset(by_par$y, by_par$match=="mismatch")
+
+hist(match,xlim=c(0.2,1),col='skyblue',border=F)
+hist(mismatch,add=T,col=scales::alpha('red',.5),border=F)
+
+xfit<-seq(min(match),max(match),length=40) 
+yfit<-dnorm(xfit,mean=mean(match),sd=sd(match)) 
+yfit <- yfit*diff(h$mids[1:2])*length(match) 
+lines(xfit, yfit, col="blue", lwd=2)
+
+xfit1<-seq(min(mismatch),max(mismatch),length=40) 
+yfit1<-dnorm(xfit1,mean=mean(mismatch),sd=sd(mismatch)) 
+yfit1 <- yfit1*diff(h$mids[1:2])*length(mismatch) 
+lines(xfit1, yfit1, col="red", lwd=2)
+by_par
+
+
+```
+
+
+```{r}
+gmatch <- subset(by_par$y, by_par$pair_type=="good", by_par$match=="match")
+cmatch <- subset(by_par$y, by_par$pair_type=="confusable", by_par$match=="match")
+gmismatch <- subset(by_par$y, by_par$pair_type=="good", by_par$match=="mismatch")
+cmismatch <- subset(by_par$y, by_par$pair_type=="confusable", by_par$match=="mismatch")
+
+b <- min(c(gmatch,cmismatch))-0.001 # Set the minimum for the breakpoints
+e <- max(c(gmatch,cmismatch)) # Set the maximum for the breakpoints
+ax <- pretty(b:e, n = 12) # Make a neat vector for the breakpoints
+ax
+
+
+hgA <- hist(gmatch, breaks = 20, plot = FALSE) # Save first histogram data
+hgB <- hist(cmismatch, breaks = 20, plot = FALSE) # Save 2nd histogram data
+
+plot(hgA, col = "red") # Plot 1st histogram using a transparent color
+plot(hgB, col = "blue", add = TRUE) # Add 2nd histogram using different color
+```
+
+
+```{r}
+match <- subset(by_par$y, by_par$pair_type=="good")
+mismatch <- subset(by_par$y, by_par$pair_type=="confusable")
+
+hist(match,xlim=c(0.2,1),col='skyblue',border=F)
+hist(mismatch,add=T,col=scales::alpha('red',.5),border=F)
+
+xfit<-seq(min(match),max(match),length=40) 
+yfit<-dnorm(xfit,mean=mean(match),sd=sd(match)) 
+yfit <- yfit*diff(h$mids[1:2])*length(match) 
+lines(xfit, yfit, col="blue", lwd=2)
+
+xfit1<-seq(min(mismatch),max(mismatch),length=40) 
+yfit1<-dnorm(xfit1,mean=mean(mismatch),sd=sd(mismatch)) 
+yfit1 <- yfit1*diff(h$mids[1:2])*length(mismatch) 
+lines(xfit1, yfit1, col="red", lwd=2)
+```
+
+
+```{r}
+```
+
